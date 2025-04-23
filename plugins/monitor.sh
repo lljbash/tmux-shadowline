@@ -1,14 +1,17 @@
 #!/usr/bin/env bash
 
-last_update_ms=$(tmux show-environment TMUX_MONITOR_LAST_UPDATE_MS 2>/dev/null)
-cpu1=$(tmux show-environment TMUX_MONITOR_CPU1 2>/dev/null)
-net1=$(tmux show-environment TMUX_MONITOR_NET1 2>/dev/null)
+cwd="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$cwd/common.sh"
+
+last_update_ms=$(get_tmux_option "@shadowline-monitor-last-update-ms" "")
+cpu1=$(get_tmux_option "@shadowline-monitor-cpu1" "")
+net1=$(get_tmux_option "@shadowline-monitor-net1" "")
 current_ms=$(date +%s%3N)
 cpu2=$(grep 'cpu ' /proc/stat)
 net2=$(ip -s link show eth0)
-tmux set-environment TMUX_MONITOR_LAST_UPDATE_MS "$current_ms"
-tmux set-environment TMUX_MONITOR_CPU1 "$cpu2"
-tmux set-environment TMUX_MONITOR_NET1 "$net2"
+set_tmux_option "@shadowline-monitor-last-update-ms" "$current_ms"
+set_tmux_option "@shadowline-monitor-cpu1" "$cpu2"
+set_tmux_option "@shadowline-monitor-net1" "$net2"
 if [[ -z $last_update_ms ]]; then
   exit 1
 fi

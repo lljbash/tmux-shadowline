@@ -1,13 +1,16 @@
 #!/usr/bin/env bash
 
-set -e
+set -euo pipefail
+
+cwd="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$cwd/common.sh"
 
 location="Tsinghua"
 update_interval=300
 curl_timeout=10
 
 fetch_weather_info() {
-  set -e
+  set -euo pipefail
   weather_information=$(curl -sL --max-time "$curl_timeout" "wttr.in/$location?format=%t%40%w%40%c")
 
   temperature=$(cut -d '@' -f 1 <<<"$weather_information")
@@ -17,16 +20,14 @@ fetch_weather_info() {
   echo "$emoji ${temperature} $wind"
 }
 
-if ! last_update=$(tmux show-environment TMUX_WEATHER_LAST_UPDATE 2>/dev/null); then
-  last_update=0
-fi
+last_update=$(get_tmux_option "@shadowline-weather-last-update" 0)
 now=$(date +%s)
 if ((now - last_update > update_interval)); then
-  tmux set-environment TMUX_WEATHER_LAST_UPDATE "$now"
+  set_tmux_option "@shadowline-weather-last-update" "$now"
   weather_info=$(fetch_weather_info)
-  tmux set-environment TMUX_WEATHER_INFO "$weather_info"
+  set_tmux_option "@shadowline-weather-info" "$weather_info"
 else
   set -o pipefail
-  weather_info=$(tmux show-environment TMUX_WEATHER_INFO | cut -d '=' -f 2)
+  weather_info=$(get_tmux_option "@shadowline-weather-info" "")
 fi
 echo "$weather_info"

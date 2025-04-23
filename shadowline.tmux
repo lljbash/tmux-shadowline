@@ -3,19 +3,22 @@
 set -euo pipefail
 
 cwd="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$cwd/plugins/common.sh"
 
 ## avoid loading shadowline multiple times
 lock="$cwd/shadowline.lock"
-# atomic test-and-set
-: >>$lock
-{
-  flock 3
-  set +e
-  tmux show-environment TMUX_SHADOWLINE_LOADED 1>/dev/null 2>&1
-  shadowline_loaded=$(($? == 0))
-  set -e
-  tmux set-environment TMUX_SHADOWLINE_LOADED 1
-} 3<$lock
+# === atomic test-and-set
+set +e
+if ! mkdir "$lock" 2>/dev/null; then
+  # another instance is running
+  shadowline_loaded=1
+else
+  shadowline_loaded=$(get_tmux_option "@shadowline-loaded" 0)
+  set_tmux_option "@shadowline-loaded" 1
+  rmdir "$lock"
+fi
+set -e
+# ===
 if [[ $shadowline_loaded -eq 1 ]]; then
   exit
 fi
