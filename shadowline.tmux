@@ -2,6 +2,24 @@
 
 set -euo pipefail
 
+cwd="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+## avoid loading shadowline multiple times
+lock="$cwd/shadowline.lock"
+# atomic test-and-set
+: >>$lock
+{
+  flock 3
+  set +e
+  tmux show-environment TMUX_SHADOWLINE_LOADED 1>/dev/null 2>&1
+  shadowline_loaded=$(($? == 0))
+  set -e
+  tmux set-environment TMUX_SHADOWLINE_LOADED 1
+} 3<$lock
+if [[ $shadowline_loaded -eq 1 ]]; then
+  exit
+fi
+
 declare -A color_mapping=(
   ["status_fg"]="#e3e1e4"
   ["status_bg"]="#262626"
@@ -121,7 +139,6 @@ tmux setw -g window-status-format "\
 #[$(color window_bg status_bg)]\
 "
 
-current_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 get_plugin() {
   set -eu
   if [[ $# -ne 1 ]]; then
@@ -131,7 +148,7 @@ get_plugin() {
   local plugin_name="$1"
   local plugin_script
   local plugin_style
-  plugin_script="#($current_dir/plugins/${plugin_name}.sh)"
+  plugin_script="#($cwd/plugins/${plugin_name}.sh)"
   plugin_style="#[$(colorf "plugin_${plugin_name}")]"
   if [ "$plugin_name" == "session" ]; then
     plugin_style="$plugin_style#{?client_prefix,#[$(colorb plugin_session_prefix)],}"
