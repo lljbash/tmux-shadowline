@@ -3,15 +3,15 @@
 cwd="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$cwd/common.sh"
 
-last_update_ms=$(get_tmux_option "@shadowline-monitor-last-update-ms" "")
-cpu1=$(get_tmux_option "@shadowline-monitor-cpu1" "")
-net1=$(get_tmux_option "@shadowline-monitor-net1" "")
+last_update_ms=$(get_tmux_var "@shadowline-monitor-last-update-ms" "")
+cpu1=$(get_tmux_var "@shadowline-monitor-cpu1" "")
+net1=$(get_tmux_var "@shadowline-monitor-net1" "")
 current_ms=$(date +%s%3N)
 cpu2=$(grep 'cpu ' /proc/stat)
 net2=$(ip -s link show eth0)
-set_tmux_option "@shadowline-monitor-last-update-ms" "$current_ms"
-set_tmux_option "@shadowline-monitor-cpu1" "$cpu2"
-set_tmux_option "@shadowline-monitor-net1" "$net2"
+set_tmux_var "@shadowline-monitor-last-update-ms" "$current_ms"
+set_tmux_var "@shadowline-monitor-cpu1" "$cpu2"
+set_tmux_var "@shadowline-monitor-net1" "$net2"
 if [[ -z $last_update_ms ]]; then
   exit 1
 fi

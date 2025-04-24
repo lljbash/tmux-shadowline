@@ -20,14 +20,14 @@ fetch_weather_info() {
   echo "$emoji ${temperature} $wind"
 }
 
-last_update=$(get_tmux_option "@shadowline-weather-last-update" 0)
+last_update=$(get_tmux_var "@shadowline-weather-last-update" 0)
 now=$(date +%s)
 if ((now - last_update > update_interval)); then
-  set_tmux_option "@shadowline-weather-last-update" "$now"
+  set_tmux_var "@shadowline-weather-last-update" "$now"
   weather_info=$(fetch_weather_info)
-  set_tmux_option "@shadowline-weather-info" "$weather_info"
+  set_tmux_var "@shadowline-weather-info" "$weather_info"
 else
   set -o pipefail
-  weather_info=$(get_tmux_option "@shadowline-weather-info" "")
+  weather_info=$(get_tmux_var "@shadowline-weather-info" "")
 fi
 echo "$weather_info"
